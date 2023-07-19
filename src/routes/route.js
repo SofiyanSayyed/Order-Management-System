@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router()
+const {createCustomer} = require('../controllers/customerController')
 
-// router.post('/api/customers', createCustomer)
+router.post('/register', createCustomer)
 
 
 

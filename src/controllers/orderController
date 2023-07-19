@@ -1,0 +1,48 @@
+const orderModel = require('../models/orderModel')
+const customerModel = require('../models/customerModel')
+const { validString, validPhone, validEmail, validPassword, validObjectId } = require('../validations/validation')
+
+const createOrder = async (req, res) => {
+    try {
+      const { customerId, amount } = req.body;
+
+      if(!validObjectId(customerId)){
+        return res.status(400).json({status:false, message: "Invalid Id"})
+      }
+
+      const customer = await customerModel.findById(customerId);
+      if (!customer) {
+        return res.status(404).json({status: false, message:'Customer not found'});
+      }
+  
+      let discount = 0;
+      if (customer.category === 'gold') {
+        discount = 0.1; // 10% discount for gold customers
+      } else if (customer.category === 'platinum') {
+        discount = 0.2; // 20% discount for platinum customers
+      }
+  
+      const order = await orderModel.create({
+        customer: customerId,
+        amount,
+        discount,
+      });
+  
+      customer.totalOrders++;
+      if (customer.totalOrders === 10) {
+        customer.category = 'gold';
+      } else if (customer.totalOrders === 20) {
+        customer.category = 'platinum';
+      }
+
+      await customer.save();
+  
+      res.status(201).json({status: true, data: order});
+    } catch (error) {
+      res.status(500).json({ error: 'Error creating order' });
+    }
+  }
+
+
+
+  module.exports = {createOrder}
